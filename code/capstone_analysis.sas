@@ -11,18 +11,17 @@
 
   Note: The original program was lost with my university virtual-desktop
   account. I rebuilt this script in 2026 from the paper's Methods section and
-  checked it against the published tables; it reproduces Table 1, Table 2,
-  Table 3 and Figures 1-4. See the README ("Looking back") for the
-  parameterization note on the p-values.
+  checked it against the paper; it reproduces Table 1, Table 2, Table 3 and
+  Figures 1-4.
 ============================================================================*/
 
 /* ---- 1. Setup ----------------------------------------------------------- */
 libname nsch "/path/to/your/nsch_2022_topical_SAS";   /* <-- edit this */
 
-/* PARAM = effect reproduces the p-values printed in the paper (SAS default).
-   PARAM = ref    gives p-values that test each level against its reference
-                  group and agree with the odds-ratio confidence intervals.  */
-%let param = effect;
+/* Reference-cell coding: each p-value tests the same comparison as its odds
+   ratio (level vs. reference group). SAS's default, PARAM=EFFECT, would test
+   each level against the average of all levels instead.                    */
+%let param = ref;
 
 /* ---- 2. Data cleaning ---------------------------------------------------- */
 
@@ -135,12 +134,12 @@ proc surveylogistic data=analysis;
     model aware(event='1') = ins_cat;
 run;
 
-/* Crude rows for each covariate: insurance type + that covariate */
+/* Crude: each covariate alone */
 %macro crude(var, ref);
     proc surveylogistic data=analysis;
         %design
-        class ins_cat(ref='Private') &var(ref="&ref") / param=&param;
-        model aware(event='1') = ins_cat &var;
+        class &var(ref="&ref") / param=&param;
+        model aware(event='1') = &var;
     run;
 %mend crude;
 
@@ -156,7 +155,9 @@ proc surveylogistic data=analysis;
     model aware(event='1') = ins_cat age_cat shcn_cat race_cat fpl_cat;
 run;
 
-/* ---- 5. Table 3 + Figures 1-4: interaction models ------------------------ */
+/* ---- 5. Table 3 + Figures 1-4: interaction models ------------------------
+   Term-level p-values come from the parameter estimates; the overall test for
+   each interaction is the ins_cat*covariate row of "Type 3 Analysis of Effects". */
 %macro interact(var, ref, title, outname);
     proc surveylogistic data=analysis;
         %design

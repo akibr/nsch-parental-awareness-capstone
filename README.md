@@ -7,6 +7,8 @@ Author: Akib Rahman · Advisor: Dr. Chloe Anya Mirzayi
 
 📄 **[Read the full paper (PDF)](paper/Rahman_Akib_CapstonePaper.pdf)** · [Word version](paper/Rahman_Akib_CapstonePaper.docx)
 
+*Revised in 2026 to correct reporting in Tables 2–3 and the related text. The originally submitted version is in this repository's commit history.*
+
 ---
 
 ## Research question
@@ -29,15 +31,16 @@ The NSCH public-use files are free to download from the Census Bureau. They are 
 All analyses were run in **SAS 9.4** and account for the NSCH's complex survey design (weights, strata, clusters).
 
 - Weighted descriptive statistics with Rao-Scott chi-square tests
-- Crude and adjusted survey logistic regression (odds ratios with 95% CIs)
-- Interaction models (insurance type × each covariate)
+- Crude and adjusted survey logistic regression (odds ratios with 95% CIs, reference-cell coding)
+- Interaction models (insurance type × each covariate) with joint Wald tests
 - Predicted-probability interaction plots
 
 ## Key findings
 
 - Overall, **52.4%** of parents knew how their adolescent would be insured as an adult.
 - Awareness was highest among parents of privately insured children (**63.6%**) and lowest among parents of uninsured children (**26.3%**).
-- After adjustment, parents of uninsured adolescents had **77% lower odds** of awareness than parents of privately insured adolescents (aOR 0.23, 95% CI 0.16–0.34).
+- After adjustment, parents of uninsured adolescents had **77% lower odds** of awareness (aOR 0.23, 95% CI 0.16–0.34) and parents of publicly insured adolescents had **57% lower odds** (aOR 0.43, 95% CI 0.36–0.51) than parents of privately insured adolescents.
+- The public–private gap **widened with age**. Awareness among parents of privately insured adolescents rose from 56% at ages 12–13 to 72% at ages 16–17, but stayed flat (35–42%) for publicly insured adolescents, right as Medicaid/CHIP eligibility nears its end.
 - Awareness rose with household income: 65.7% at ≥400% FPL vs. 39.4% at 0–99% FPL.
 
 ## Figures
@@ -77,13 +80,16 @@ The program goes through each step in the paper:
 
 All procedures use the NSCH design variables (`STRATA FIPSST STRATUM`, `CLUSTER HHID`, `WEIGHT FWC`).
 
-> **About the code:** I lost the original program when my university virtual-desktop account closed. I rebuilt this script from the paper's Methods section in 2026 and checked it against the published results: the sample sizes, weighted percentages, odds ratios, confidence intervals, p-values and plotted probabilities all match the paper.
+> **About the code:** I lost the original program when my university virtual-desktop account closed. I rebuilt this script from the paper's Methods section in 2026. Its output matches every table and figure in the paper.
 
 ## Looking back
 
-The paper is posted as I submitted it. Since then, I've found a few things I would do differently:
+If I were starting this project today, I would approach a few things differently:
 
-- **P-values that don't match the odds ratios in Tables 2–3.** The odds ratios and confidence intervals in the paper compare each group to its reference group. The p-values, however, came from SAS's default *effect* parameterization (`PARAM=EFFECT`), which tests each group against the average of all groups. That's why public insurance shows aOR 0.43 (95% CI 0.36–0.51) next to p = 0.343. With reference coding (`PARAM=REF`), the p-value is < .0001. So parents of publicly insured adolescents also had significantly lower odds of awareness than parents of privately insured adolescents, which changes part of the Discussion. In the script, setting `%let param = ref;` gives the corrected p-values.
-- **"Crude" covariate estimates.** In Table 2, the crude estimates for age, SHCN, race and FPL come from models with insurance type plus that one covariate. They aren't truly unadjusted.
-- **Typos in the tables:** 14–15 yrs crude OR should be 1.15, not 1.50. The 200–399% FPL crude CI should be 0.60–0.80. Black non-Hispanic "not aware" n should be 541. In Table 3, the strata "13-14 yrs" and "299-399%" should read 14–15 and 200–399%, and the two SHCN p-values are swapped (Public = 0.157, Uninsured = 0.163).
-- **Cross-sectional design.** As noted in the paper, this design can't show whether insurance type drives awareness or the other way around.
+- **Report effects on a probability scale.** About half of parents were aware, so odds ratios overstate relative differences (an OR of 0.23 is not "77% less likely"). I'd lead with predicted probabilities or prevalence ratios. For example, 26% of parents of uninsured adolescents were aware, compared with 64% of parents of privately insured adolescents. Those numbers are easier for policymakers to act on.
+- **Use subpopulation (DOMAIN) analysis.** Instead of subsetting the file to adolescents with complete data, I'd keep the full sample in the survey procedures and define the analytic group as a domain. That's the recommended way to keep variance estimates design-correct.
+- **Keep "public only" and "public + private" separate.** Combining them into "any public" simplified the comparison but may hide differences among families who hold both kinds of coverage.
+- **Account for state policy.** Medicaid and CHIP age limits and transition rules differ by state. Adding state-level variables (e.g., Medicaid expansion status), or using models that account for state, would connect the results more directly to policy.
+- **Add measures of parent knowledge and resources.** Parent education, health literacy, and whether the adolescent has a medical home with transition planning (all in the NSCH) could help explain *why* awareness differs.
+- **Write a pre-specified analysis plan and use version control from day one.** Writing out each model before running it, and keeping the code in a Git repository, makes every number easy to trace. It also would have saved my original code.
+- **Longitudinal data.** A cross-sectional survey can't show whether insurance type shapes awareness or whether more informed parents choose private coverage. Following families through the transition to adulthood would answer that.
