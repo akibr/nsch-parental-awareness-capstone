@@ -5,7 +5,7 @@
 MPH Capstone (Epidemiology & Biostatistics) · CUNY Graduate School of Public Health & Health Policy · December 2024
 Author: Akib Rahman · Advisor: Dr. Chloe Anya Mirzayi
 
-📄 **[Download the full paper (Word)](paper/Rahman_Akib_CapstonePaper.docx)**
+📄 **[Read the full paper (PDF)](paper/Rahman_Akib_CapstonePaper.pdf)** · [Word version](paper/Rahman_Akib_CapstonePaper.docx)
 
 ---
 
@@ -68,7 +68,8 @@ The program goes through each step in the paper:
 
 | Step | Procedure | Output |
 |---|---|---|
-| Recode exposure, outcome and covariates | `DATA` step | Analytic sample, n = 18,423 |
+| Sample flow and raw-value checks (incl. NSCH special missing codes) | `PROC SQL`, `PROC FREQ`, `PROC MEANS` | 54,103 → 18,762 → 18,423 |
+| Recode exposure, outcome and covariates, then verify each recode | `DATA` step, `PROC FREQ` | Analytic sample, n = 18,423 |
 | Weighted descriptives, Rao-Scott χ² | `PROC SURVEYFREQ` | Table 1 |
 | Crude and adjusted logistic regression | `PROC SURVEYLOGISTIC` | Table 2 |
 | Insurance × covariate interaction models | `PROC SURVEYLOGISTIC` | Table 3 |

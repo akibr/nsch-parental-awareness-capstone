@@ -24,7 +24,32 @@ libname nsch "/path/to/your/nsch_2022_topical_SAS";   /* <-- edit this */
                   group and agree with the odds-ratio confidence intervals.  */
 %let param = effect;
 
-/* ---- 2. Analytic dataset ------------------------------------------------- */
+/* ---- 2. Data cleaning ---------------------------------------------------- */
+
+/* 2a. Sample flow: all children -> HEALTHKNOW asked -> complete exposure.
+       Expected: 54,103 -> 18,762 -> 18,423 (339 missing insurance type).    */
+proc sql;
+    select count(*)                                              as all_children,
+           sum(not missing(HEALTHKNOW))                          as asked_healthknow,
+           sum(not missing(HEALTHKNOW) and not missing(INSTYPE)) as analytic_n
+    from nsch.nsch_2022e_topical;
+quit;
+
+/* 2b. Raw values among adolescents asked the outcome question.
+       NSCH stores non-response as special missing values (.M = no valid
+       response, .L = logical skip, .N = not in universe, .D = suppressed);
+       the MISSING option lists them so nothing is dropped silently.         */
+proc freq data=nsch.nsch_2022e_topical;
+    where not missing(HEALTHKNOW);
+    tables HEALTHKNOW INSTYPE SC_CSHCN SC_RACE_R SC_HISPANIC_R / missing;
+run;
+
+proc means data=nsch.nsch_2022e_topical n nmiss min max;
+    where not missing(HEALTHKNOW);
+    var SC_AGE_YEARS FPL_I1;   /* expect ages 12-17; FPL_I1 is imputed, 50-400 */
+run;
+
+/* 2c. Build the analytic dataset ------------------------------------------ */
 data analysis;
     set nsch.nsch_2022e_topical;
 
@@ -69,6 +94,20 @@ data analysis;
           race_cat = 'Race/Ethnicity'
           fpl_cat  = 'FPL';
 run;   /* n = 18,423 */
+
+/* 2d. Check every recode against its source variable */
+proc freq data=analysis;
+    tables HEALTHKNOW*aware
+           INSTYPE*ins_cat
+           SC_AGE_YEARS*age_cat
+           SC_CSHCN*shcn_cat
+           SC_HISPANIC_R*SC_RACE_R*race_cat / list missing;
+run;
+
+proc means data=analysis n min max;
+    class fpl_cat;
+    var FPL_I1;                /* each category's range should sit inside its cut-points */
+run;
 
 /* Survey design statements used by every procedure below */
 %macro design;
