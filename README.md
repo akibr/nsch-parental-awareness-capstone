@@ -76,7 +76,7 @@ All analyses were run in **SAS 9.4** and account for the NSCH's complex survey d
 
 **Steps**
 1. Open [`code/capstone_analysis.sas`](code/capstone_analysis.sas).
-2. Change the `libname` path near the top of the script (line 19) to the folder holding the data file.
+2. Change the `libname` path near the top of the script (line 17) to the folder holding the data file.
 3. Run the program.
 
 The program goes through each step in the paper:
